@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Zelp - Know the City ÐApp</title>
+  <meta charset="UTF-8">
+      
+  <style>
+      table.summary {
+          border-collapse: collapse;
+      }
+
+      table.summary, .summary th, .summary td {
+          border: 1px solid black;
+      }
+  </style>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
+  <script>
+
+      let expander = "http://localhost:3000/expand";
+
+      let _web3 = null;
+      let zelp = null;
+
+      $(function() {
+        if (typeof web3 !== 'undefined') {
+            _web3 = new Web3(web3.currentProvider);
+        } else {
+            $("#results").text('No web3? You should consider trying MetaMask!');
+        }
+
+        updateSelected();
+
+        $("#target").click(function() {
+            updateSelected();
+        });
+      });
+
+      function updateSelected() {
+          let restaurantId = $("#restaurant").val();
+          callSearchContract(restaurantId);
+      }
+
+      function callSearchContract(restaurantId) {
+        if (!_web3) {
+            return;
+        }
+        let purchase = null;
+        let account = null;
+        let solRestId = _web3.fromUtf8(restaurantId);
+        let toBuy = null;
+
+        let onAbi = $.Deferred();
+        $.getJSON('abi.json')
+        .done(function(data) { onAbi.resolve(data); })
+        .fail(() => { onAbi.reject("getJSON() error"); });
+
+        onAbi.then((data) => {
+            console.log("Zelp at address: " + data.address);
+            zelp = _web3.eth.contract(data.abi).at(data.address);
+
+            $("#results").text('Finding relevant content...');
+
+            let d = $.Deferred();
+            zelp.search.call(solRestId, d.resolve);
+            return d.promise();
+        })
+        .then((error, results) => {
+            if (error) {
+                throw error;
+            }
+
+            let resourceIds = results[0];
+            let prices = results[1];
+
+            toBuy = [];
+            for (let i = 0; i < resourceIds.length; ++i) {
+                toBuy.push({
+                    resourceId: _web3.toUtf8(resourceIds[i]),
+                    price: _web3.toDecimal(prices[i]),
+                })
+            }
+
+            if (toBuy.length == 0) {
+                $("#results").text("No reviews for restaurant");
+                throw null; // Early terminate the flow
+            }
+
+            let total = 0;
+            let table = $("<table class='summary' />");
+            $("#results").empty().append('You are about to buy:')
+                                 .append(table)
+                                 .append('Confirm transaction in MetaMask to continue...');
+            table.append($('<tr />').append($('<th />').text('Resource'))
+                                    .append($('<th />').text('Price')));
+            $.each(toBuy, function(index, resource) {
+                table.append($('<tr />').append($('<td />').text(resource.resourceId))
+                                        .append($('<td />').text('Ξ ' + toEther(resource.price))));
+                total += resource.price;
+            });
+            table.append($('<tr />').append($('<td />').text('total:'))
+                                    .append($('<td />').text('Ξ ' + toEther(total))));
+
+            let d = $.Deferred();
+            _web3.eth.getAccounts(d.resolve);
+            return d.promise();
+        })
+        .then((error, accounts) => {
+            if (error) {
+                throw error;
+            }
+            account = accounts[0];
+            console.log("Account: " + account);
+
+            let total = 0;
+            let resourceIds = [];
+            $.each(toBuy, function(index, resource) {
+                resourceIds.push(_web3.fromUtf8(resource.resourceId));
+                total += resource.price;
+            });
+
+            let options = {from: account, value: total};
+            let d = $.Deferred();
+            zelp.purchase(resourceIds, options, d.resolve);
+            return d.promise();
+        })
+        .then((error, txId) => {
+            if (error) {
+                throw error;
+            }
+            console.log("txId: " + txId);
+            $("#results").text('Purchasing reviews... ')
+                         .append('<img src="ajax-loader.gif" />');
+
+            purchases = zelp.Purchase({customer: account});
+
+            let d = $.Deferred();
+            let reviews = [];
+            // For each purchase
+            purchases.watch(function(error, purchaseInfo) {
+                if (purchaseInfo.transactionHash == txId) {
+                    let args = purchaseInfo.args;
+                    let review = {
+                        endpoint: _web3.toUtf8(args.endpoint),
+                        resourceId: _web3.toUtf8(args.resourceId),
+                        invoice: args.invoice
+                    };
+                    reviews.push(review);
+                    if (reviews.length == toBuy.length) {
+                        purchases.stopWatching();
+                        d.resolve(reviews);
+                    }
+                }
+            });
+            return d;
+        })
+        .then((reviews) => {
+            if (!reviews || !reviews.length) {
+                throw "empty reviews";
+            }
+            let invoice = reviews[0].invoice; // All of them will have the same
+
+            $("#results").text("Please sign the invoice in MetaMask...");
+            let d = $.Deferred();
+            sign(invoice,
+                _web3.eth.defaultAccount,
+                (error, signature) => d.resolve(error, signature, reviews));
+            return d;
+        })
+        .then((error, signature, reviews) => {
+            if (error) {
+                throw error;
+            }
+
+            let table = $("<table />");
+            $("#results").empty().append(table);
+            $.each(reviews, function(index, review) {
+                if (!review.endpoint) {
+                    table.append($('<tr><td>search returned empty endpoint</td></tr>'));
+                    return;
+                }
+                let row = $('<tr />').append($('<td><img src="ajax-loader.gif" /></td>'));
+                table.append(row);
+                expand(review.endpoint, function(expanded) {
+                    let url = (  expanded
+                               + (expanded.endsWith('/') ? '': '/')
+                               + review.resourceId);
+                     loadReview(row, url, signature, review.resourceId);
+                });
+            });
+        })
+        .catch((error) => {
+            if (error) {
+                $("#results").text("Contract error: " + error);
+            } // Otherwise the message has already been set
+        });
+
+
+      }
+      function loadReview(at, url, signature, resourceId) {
+        $.ajax({
+            url: url,
+            dataType: "jsonp",
+            data: signature,
+            success: function(json) {
+                if (json.error) {
+                    at.empty().text("Error: " + json.error);
+                    return;
+                }
+
+                let review = json.result;
+                let rating = $("<div />");
+                let upvoteLink = $('<span />').append('<a href="#">upvote</a>');
+                upvoteLink.click(function() {
+                    upvoteLink.empty().append('<img src="ajax-loader.gif" />');
+                    upvote(resourceId,
+                           signature,
+                           (error, txId) => { upvoteLink.text(error ? 'x' : '✔'); });
+                    return false;
+                });
+                at.empty()
+                    .append($('<td />').append($('<img />').attr("src", review.image)
+                                                           .attr("width", 50)
+                                                           .attr("height", 50)))
+                    .append($('<td />').text(review.user))
+                    .append($('<td />').append(rating))
+                    .append($('<td />').text(review.text))
+                    .append($('<td />').append($('<a href="#">refresh</a>').click(function() { loadReview(at, url, signature, resourceId); return false; })))
+                    .append($('<td />').append(upvoteLink));
+
+                rating.rateYo({rating: review.stars,
+                               starWidth: "15px",
+                               readOnly: true});
+            }
+        });
+      }
+
+      function expand(url, callback) {
+        $.ajax({
+            url: expander,
+            dataType: "jsonp",
+            data: {
+                url: url,
+            },
+            success: function(json) {
+                callback(json);
+            }
+        });
+      }
+
+    function toEther(x) {
+        return _web3.fromWei(x, 'ether');
+    }
+
+    function upvote(resourceId, signature, cb) {
+        if (!zelp) {
+            log.error("no zelp");
+            return;
+        }
+
+        let r = signature.signature.slice(0, 66);
+        let s = '0x' + signature.signature.slice(66, 130);
+        let v = '0x' + signature.signature.slice(130, 132);
+        v = _web3.toDecimal(v);
+
+        alert('Confirm transaction in MetaMask to continue...');
+
+        let options = {from: _web3.eth.defaultAccount};
+        zelp.upvote(resourceId, signature.invoice, r, s, v, options, cb);
+    }
+
+    function sign(invoice, address, callback) {
+        let msg = "Invoice: #";
+        let sha3 = _web3.sha3(invoice, {encoding: 'hex'}); // encoding-hex is important here
+        let proof = _web3.fromUtf8(msg + sha3.substr(sha3.length - (32 - msg.length)));
+
+        console.log(proof);
+
+        if (proof.length != 66) {
+            // Expecting a 32-bit integer in hex with 0x prefix
+            callback("Invalid proof: \"" + proof + "\"", null);
+            return;
+        }
+
+        _web3.personal.sign(proof, address, function (error, signature) {
+            if (error) {
+                callback(error, null);
+                return;
+            }
+            callback(null, {invoice: invoice,
+                            address: address,
+                            signature: signature});
+        });
+   }
+
+  </script>
+</head>
+
+<body>
+  <h1>Zelp - know the City ÐApp</h1>
+  
+  <select id="restaurant">
+    <option value="tanner_smiths">Tanner Smiths</option>
+    <option value="dutch_freds">Dutch Freds</option>
+    <option value="unknown">Unknown</option>
+  </select>
+  <input type="button" id="target" value="find reviews" />
+  <div id="results"></div>
+</body>
+</html>
