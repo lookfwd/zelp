@@ -46,6 +46,10 @@ npm install serverless-offline --save-dev
 
 Note that the theme here is, in general, generic web content "gating" by using single-use URLs that consume credits as you browse. It's easy to adapt the code of Zelp to create e.g. **news portals or forums**, where the visitor adds Ether and then browses the metadata (teaser) of the content and has to make micro-payments to access gated content. Further roles and access control (by mapping and extending the Patient/Provider roels) can enable/disable and rate content as e.g. Editors, moderators etc.
 
+## Ecosystem changes
+
+* I think there's something wrong with `MeataMask`'s `web3.personal.sign()` feature. When I put as much info as I want and `sha3` it as a first argument, the warning message shows garbage. When I give a nice message, I can put very little info in it and I have to reconstruct it in Solidity (expensive) to do `ecrecover`. There mus be a better solution.
+* In order to enable this use case, we need much faster (sub-second) contract processing times and 1000x times smaller fees. Right now fees for contract execution are many times larger than the payments. The system now would be suitable for expensive content e.g. scientific papers.
 
 ## To deploy
 
