@@ -19,6 +19,10 @@ serverless install -u https://github.com/lookfwd/zelp
 
 ## Demo
 
+Watch the demo video [here](https://www.youtube.com/watch?v=HCEWzzKAGSY).
+
+[![demo video](play.png)](https://www.youtube.com/watch?v=HCEWzzKAGSY)
+
 
 ```
 npm install -g serverless
