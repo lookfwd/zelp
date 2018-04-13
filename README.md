@@ -23,18 +23,111 @@ Watch the demo video [here](https://www.youtube.com/watch?v=HCEWzzKAGSY).
 
 [![demo video](play.png)](https://www.youtube.com/watch?v=HCEWzzKAGSY)
 
+To run the demo you will need three consoles. I will also assume a clean new instance of an EC2 server:
 
 ```
-npm install -g serverless
-npm install serverless-offline --save-dev
+Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
+Type        vCPUs   Memory (GiB)
+t2.medium   2       4
 ```
-* Change the port to 8545 in `truffle-config.js`
-* Start `ganache-cli`
-* Login with MetaMask
-* Deploy contracts: `truffle compile && truffle migrate`
-* Go to [zelp-web](zelp-web) and run `python -m SimpleHTTPServer 8000` to start a web server
-* Go to localhost:8000 to browse the `zelp` app
-* For local deployment: `serverless offline start`
+
+Highly likely your dev environment will be more powerful than that. You have to note down the IP address of your EC2 server. Below we will assume it's `34.238.28.80`. For your local dev machine, `localhost` will work.
+
+You will have to open a few ports on EC2 firewall for incoming connections. Those are: `8080`, `8545` and `3000`.
+
+![ports to enable](images/ports-to-enable.png)
+
+We should then, be ready to start.
+
+### On the 1st console
+
+First let's install some essential software:
+
+```
+git install https://github.com/lookfwd/zelp.git
+cd zelp
+sudo apt-get update
+sudo apt-get install npm
+sudo npm cache clean -f
+sudo npm install -g n
+sudo n stable
+sudo npm install -g truffle ganache-cli serverless
+```
+
+Then we install the requirements for the serverless component of the application:
+
+```
+cd serverless
+
+npm install serverless-offline --save-dev
+npm install ethereumjs-util url-expand web3
+```
+
+Finally, we go to [bit.ly](bit.ly) and create a short url for `http://<MY IP>:3000/load/` e.g. `http://34.238.28.80:3000/load/`. The reason we do this, is that the URL of your real AWS Lambda function is likely going to be quite long. It's way easier and cheaper to store in Ethereum, strings up to 32 characters. That's why we use shortened URLs.
+
+We will replace all the instances of the short URL in `default_records.json` e.g.
+
+```
+$ perl -pi -e 's/https:\/\/goo.gl\/L9oDYV/https:\/\/bit.ly\/2HiPHVE/' default_records.json
+```
+
+Note that `default_records.json` is used by both the serverless part and the contract migration code (in [Linnia-Smart-Contracts](Linnia-Smart-Contracts/migrations/2_deploy_contracts.js) at the moment. This URL part is stored in the blockchain.
+
+We can do a quick diff with `git diff .` to ensure that the URL changes are the only changes we've done.
+
+We can now start the serverless component offline:
+
+```
+serverless offline start --host 0.0.0.0
+```
+
+### On the 2nd console
+
+In the second console we deploy the smart contract. We do:
+
+```
+cd Linnia-Smart-Contracts
+ganache-cli --rpcaddr 0.0.0.0 &
+```
+
+Now we should be able to connect with MetaMask to http://34.238.28.80:8545/. We can log-out (if we were logged in) and use the passphrase from console to restore the main account (should have about Ξ100).
+
+Now we can install some dependencies:
+
+```
+npm install babel-polyfill zeppelin-solidity
+```
+
+And finally compile and migrate the contract:
+
+```
+truffle compile && truffle migrate
+```
+
+### On the 3rd console
+
+We are now ready to run the web application.
+
+```
+cd web/
+```
+
+The URL expander also runs on the serverless component (for now) so we have to change the (hardcoded for now) URL in [index.html](web/index.html). This should have the form `http://<MY IP>:3000/expand/` e.g. `http://34.238.28.80:3000/expand/`. We can do the replace:
+
+```
+perl -pi -e 's/http:\/\/localhost:3000\/expand/http:\/\/34.238.28.80:3000\/expand/' index.html
+```
+
+We can do a quick diff with `git diff .` to ensure that the URL changes are the only changes we've done.
+
+Now we can start a python web server to deliver the html pages: 
+
+```
+python -m SimpleHTTPServer 8080
+```
+
+Now we can browse to the main url, `http://<MY IP>:8080` e.g. `http://34.238.28.80:8080` and Zelp's main page should load short after.
+
 
 ## Linnia changes that would enable deeper integration
 
