@@ -5,7 +5,7 @@ A primitive Yelp clone using [Linnia Smart Contract](https://github.com/ConsenSy
 
 ## Zelp Architecture
 
-![zelp architecture](zelp.png)
+![zelp architecture](images/zelp.png)
 
 Zelp consists of 3 main components, highlighted with yellow in the diagram above.
 
@@ -21,7 +21,11 @@ serverless install -u https://github.com/lookfwd/zelp
 
 Watch the demo video [here](https://www.youtube.com/watch?v=HCEWzzKAGSY).
 
-[![demo video](play.png)](https://www.youtube.com/watch?v=HCEWzzKAGSY)
+[![demo video](images/play.png)](https://www.youtube.com/watch?v=HCEWzzKAGSY)
+
+## How to run
+
+![How to run](images/how-to-run.png)](https://www.youtube.com/watch?v=f6seFW19eU4)
 
 To run the demo you will need three consoles. I will also assume a clean new instance of an EC2 server:
 
@@ -63,7 +67,7 @@ npm install serverless-offline --save-dev
 npm install ethereumjs-util url-expand web3
 ```
 
-Finally, we go to [bit.ly](bit.ly) and create a short url for `http://<MY IP>:3000/load/` e.g. `http://34.238.28.80:3000/load/`. The reason we do this, is that the URL of your real AWS Lambda function is likely going to be quite long. It's way easier and cheaper to store in Ethereum, strings up to 32 characters. That's why we use shortened URLs.
+Finally, we go to [bit.ly](https://bitly.com/) and create a short url for `http://<MY IP>:3000/load/` e.g. `http://34.238.28.80:3000/load/`. The reason we do this, is that the URL of your real AWS Lambda function is likely going to be quite long. It's way easier and cheaper to store in Ethereum, strings up to 32 characters. That's why we use shortened URLs.
 
 We will replace all the instances of the short URL in `default_records.json` e.g.
 
@@ -90,7 +94,7 @@ cd Linnia-Smart-Contracts
 ganache-cli --rpcaddr 0.0.0.0 &
 ```
 
-Now we should be able to connect with MetaMask to http://34.238.28.80:8545/. We can log-out (if we were logged in) and use the passphrase from console to restore the main account (should have about Ξ100).
+Now we should be able to connect with MetaMask to `http://34.238.28.80:8545/`. We can log-out (if we were logged in) and use the passphrase from console to restore the main account (should have about Ξ 100).
 
 Now we can install some dependencies:
 
