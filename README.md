@@ -6,7 +6,9 @@ There are 3 types o participants on Zelp:
 
 1. The Zelp "owner"
 2. The reviewer
-3. The Zelp user/visitor
+3. A Zelp user/visitor
+
+More specifically:
 
 1. The Zelp "owner" 
 
@@ -22,9 +24,9 @@ There are 3 types o participants on Zelp:
 * Pays fees for encoding/decoding in Linnia Mesh/AWS serverless
 * Pays fees to acknowledge "consumption" on the smart contract
 
-3. The Zelp user/visitor
+3. A Zelp user/visitor
 
-* Pays micro-payments for content
+* Pays micro-payments for content/reviews
 * Upvotes good content (there's no incentive for this)
 * Might be an Editor etc. in which case the upvote counts more (might be automatically-paid role)
 
