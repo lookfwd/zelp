@@ -44,7 +44,7 @@ We should then, be ready to start.
 First let's install some essential software:
 
 ```
-git install https://github.com/lookfwd/zelp.git
+git clone https://github.com/lookfwd/zelp.git
 cd zelp
 sudo apt-get update
 sudo apt-get install npm
