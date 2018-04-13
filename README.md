@@ -25,7 +25,7 @@ Watch the demo video [here](https://www.youtube.com/watch?v=HCEWzzKAGSY).
 
 ## How to run
 
-![How to run](images/how-to-run.png)](https://www.youtube.com/watch?v=f6seFW19eU4)
+[![How to run](images/how-to-run.png)](https://www.youtube.com/watch?v=f6seFW19eU4)
 
 To run the demo you will need three consoles. I will also assume a clean new instance of an EC2 server:
 
