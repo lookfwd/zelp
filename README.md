@@ -1,8 +1,6 @@
 # Zelp
 
-A primitive Yelp clone using [Linnia Smart Contract](https://github.com/ConsenSys/Linnia-Smart-Contracts/issues/18).
-
-There are 3 types o participants on Zelp:
+A primitive Yelp clone using [Linnia Smart Contract](https://github.com/ConsenSys/Linnia-Smart-Contracts/issues/18). There are 3 types o participants on Zelp:
 
 1. The Zelp "owner"
 2. The reviewer
