@@ -6,7 +6,7 @@ const eutil = require("ethereumjs-util");
 
 var fs = require('fs');
 
-const ZELP_KEY = process.env.ZELP_KEY || "DEFAULT_KEY",
+const ZELP_KEY = process.env.ZELP_KEY || "the-key",
     ZELP_WEB3_PROVIDER = (process.env.ZELP_WEB3_PROVIDER || "ws://localhost:8545"),
 	ZELP_ADDRESS = process.env.ZELP_ADDRESS;
 
