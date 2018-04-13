@@ -58,7 +58,7 @@ module.exports = (deployer, network, accounts) => {
           abi: JSON.parse(data).abi
       };
 
-      fs.writeFile("../zelp-web/abi.json", JSON.stringify(contract), function(err) {
+      fs.writeFile("../web/abi.json", JSON.stringify(contract), function(err) {
           if(err) {
               return console.log(err);
           }
