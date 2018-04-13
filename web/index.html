@@ -140,7 +140,7 @@
             let reviews = [];
             // For each purchase
             purchases.watch(function(error, purchaseInfo) {
-                if (purchaseInfo.transactionHash == txId) {
+                //if (purchaseInfo.transactionHash == txId) {
                     let args = purchaseInfo.args;
                     let review = {
                         endpoint: _web3.toUtf8(args.endpoint),
@@ -152,7 +152,7 @@
                         purchases.stopWatching();
                         d.resolve(reviews);
                     }
-                }
+                //}
             });
             return d;
         })
