@@ -10,7 +10,7 @@ const ZELP_KEY = process.env.ZELP_KEY || "DEFAULT_KEY",
     ZELP_WEB3_PROVIDER = (process.env.ZELP_WEB3_PROVIDER || "ws://localhost:8545"),
 	ZELP_ADDRESS = process.env.ZELP_ADDRESS;
 
-assert(ZELP_ADDRESS);  // We really can't work without this
+//assert(ZELP_ADDRESS);  // We really can't work without this
 
 function encrypt(plaintext, key) {
 	// Based on https://goo.gl/LEwBQW
