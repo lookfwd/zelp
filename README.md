@@ -108,6 +108,8 @@ And finally compile and migrate the contract:
 truffle compile && truffle migrate
 ```
 
+`truffle migrate` runs [the migration script](Linnia-Smart-Contracts/migrations/2_deploy_contracts.js) and this in-turn creates an `abi.json` file in each of the `web` and `serverless` directories. This file is used for development and allows those two components to avoid having hardcoded contract addresses and ABI definitions. This also means that those two components won't work unless you do `truffle migrate`. Obviously in production, one can hardcode the ABI and contract's address.
+
 ### On the 3rd console
 
 We are now ready to run the web application.
