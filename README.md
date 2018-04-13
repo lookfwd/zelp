@@ -2,6 +2,31 @@
 
 A primitive Yelp clone using [Linnia Smart Contract](https://github.com/ConsenSys/Linnia-Smart-Contracts/issues/18).
 
+There are 3 types o participants on Zelp:
+
+1. The Zelp "owner"
+2. The reviewer
+3. The Zelp user/visitor
+
+1. The Zelp "owner" 
+
+* Owns the server that hosts the web app (could be hosted in IPFS)
+* Owns the smart contract
+* Owns the code that will run on Linnia Mesh or AWS etc.
+
+2. The reviewer
+
+* Is paid for high quality reviews
+* Reviews the code the owner provides.
+* Runs the command to deploy it to it's Linnia Mesh/AWS serverless
+* Pays fees for encoding/decoding in Linnia Mesh/AWS serverless
+* Pays fees to acknowledge "consumption" on the smart contract
+
+3. The Zelp user/visitor
+
+* Pays micro-payments for content
+* Upvotes good content (there's no incentive for this)
+* Might be an Editor etc. in which case the upvote counts more (might be automatically-paid role)
 
 ## Zelp Architecture
 
@@ -16,6 +41,12 @@ Zelp consists of 3 main components, highlighted with yellow in the diagram above
 ```
 serverless install -u https://github.com/lookfwd/zelp
 ```
+
+## Architecture Evaluation
+
+The only "vector" for abuse I can see is reviewers running modified versions of the code on the AWS, thus getting fees, while delivering spam content. A reporting system could attack this. A more technical solution would be to use something along the lines of SGX Secure Enclaves, to ensure that the results you get come from the expected, signed ,  source code. This is more complex and likely would only run in Azure right now.
+
+A nice benefit is that this model works for complex apps e.g. medical imaging. A company creates the Linnia Mesh/AWS serverless app that does some kind of feature extraction from the X-Ray. Data (which for high-res X-Ray might be 100's of MBs) doesn't leave the server - just features do. The patient reviews the code (or trust someone else that has reviewed) and deploys it. Then it goes to a medical data database and researchers can search the db based on the metadata. If they want to use an X-Ray image, they pay the fee, which goes to the patient, and then they run their algorithm on patient's Linnia Mesh/AWS serverless infrastructure and get the results.
 
 ## Demo
 
